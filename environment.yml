@@ -1,0 +1,10 @@
+name: neural_activity_decoder
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - pynwb
