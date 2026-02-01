@@ -15,26 +15,25 @@ def load_nwb(file: str, root: Path | None = None) -> dict[str, np.array]:
 
     :param file: str (Name of the NWB file)
     :param root: repo root of the project
-    :return: a dict with feature and target data
+    :return: a dict with features and target arrays
     """
     root = get_project_root()
     path = root / "data" / "raw" / file
     if not path.exists():
         raise FileNotFoundError(f"NWB file not found: {path}")
     with NWBHDF5IO(path.as_posix(), 'r') as io:
-        # spiking_band_power = io.analysis["SpikingBandPower"]
         nwb_file = io.read()
-        spiking_band = nwb_file.analysis["SpikingBandPower"].data[:]
-        threshold_crossings = nwb_file.analysis["ThresholdCrossings"].data[:]
-        index_position = nwb_file.analysis["index_position"].data[:]
-        index_velocity = nwb_file.analysis["index_velocity"].data[:]
-        mrs_position = nwb_file.analysis["mrs_position"].data[:]
-        mrs_velocity = nwb_file.analysis["mrs_velocity"].data[:]
+        neural_spiking_band = nwb_file.analysis["SpikingBandPower"].data[:]
+        neural_threshold_crossings = nwb_file.analysis["ThresholdCrossings"].data[:]
+        target_index_position = nwb_file.analysis["index_position"].data[:]
+        target_index_velocity = nwb_file.analysis["index_velocity"].data[:]
+        target_mrs_position = nwb_file.analysis["mrs_position"].data[:]
+        target_mrs_velocity = nwb_file.analysis["mrs_velocity"].data[:]
 
-        array_dict = {"spiking_band": spiking_band,
-                      "threshold_crossings": threshold_crossings,
-                      "index_position": index_position,
-                      "index_velocity": index_velocity,
-                      "mrs_position": mrs_position,
-                      "mrs_velocity": mrs_velocity}
+        array_dict = {"neural_spiking_band": neural_spiking_band,
+                      "neural_threshold_crossings": neural_threshold_crossings,
+                      "target_index_position": target_index_position,
+                      "target_index_velocity": target_index_velocity,
+                      "target_mrs_position": target_mrs_position,
+                      "target_mrs_velocity": target_mrs_velocity}
         return array_dict
