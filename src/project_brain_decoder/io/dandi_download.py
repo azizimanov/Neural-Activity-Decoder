@@ -1,5 +1,5 @@
 import requests
-from nwb_loader import get_project_root
+from project_brain_decoder.config import get_project_root
 
 
 # Example data sessions from the DANDI archive:
@@ -40,7 +40,7 @@ def download_session(url: tuple[str, str]):
     with requests.get(url[0], stream=True) as r:
         r.raise_for_status()
         root = get_project_root()
-        path = root / "data" / "preprocessed" / url[1]
+        path = root / "data" / "raw" / url[1]
         if not path.parent.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
         with open(path.as_posix(), "wb") as f:
