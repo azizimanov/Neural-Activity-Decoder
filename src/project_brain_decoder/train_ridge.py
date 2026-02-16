@@ -1,6 +1,6 @@
 from pathlib import Path
+from project_brain_decoder.config import get_project_root
 from project_brain_decoder.io.nwb_loader import load_nwb
-from project_brain_decoder.io.nwb_loader import get_project_root
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
@@ -10,7 +10,7 @@ import pandas as pd
 
 
 root = get_project_root()
-raw_data_dir = root / "data" / "raw"
+preprocessed_data_dir = root / "data" / "preprocessed"
 results_dir = root / "results"
 
 
@@ -28,7 +28,7 @@ def main(path, model, results_dir):
         model.fit(X=X_train, y=y_train)
         prediction = model.predict(X=X_test)
         r2 = r2_score(y_pred=prediction, y_true=y_test)
-        results.append(tuple([Path(file_path).stem, r2]))
+        results.append(tuple([Path(file_path).stem, f"{r2}"]))
     df = pd.DataFrame(data=results, columns=["Session name", "R2 score"])
     results_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(path_or_buf=results_dir / "ridge_r2.csv", index=False)
@@ -37,4 +37,4 @@ def main(path, model, results_dir):
 
 
 if __name__ == "__main__":
-    main(path=raw_data_dir, model=Ridge(), results_dir=results_dir)
+    main(path=preprocessed_data_dir, model=Ridge(), results_dir=results_dir)
