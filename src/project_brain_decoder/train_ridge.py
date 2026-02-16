@@ -10,7 +10,7 @@ import pandas as pd
 
 
 root = get_project_root()
-preprocessed_data_dir = root / "data" / "preprocessed"
+data_dir = root / "data" / "raw"
 results_dir = root / "results"
 
 
@@ -37,4 +37,4 @@ def main(path, model, results_dir):
 
 
 if __name__ == "__main__":
-    main(path=preprocessed_data_dir, model=Ridge(), results_dir=results_dir)
+    main(path=data_dir, model=Ridge(), results_dir=results_dir)
