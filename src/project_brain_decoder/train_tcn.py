@@ -1,3 +1,4 @@
+from IPython.utils.PyColorize import neutral_nt
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Input, Model
 from tcn import TCN
@@ -18,49 +19,40 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
     """Slice into (window_size, C) windows; targets aligned to last timestep of each window"""
     T, C = neural.shape
     n_windows = (T - window_size) // stride + 1
-    X_train = np.stack([neural[i : i + window_size] for i in range(0, T - window_size + 1, stride)])
+    X = np.stack([neural[i : i + window_size] for i in range(0, T - window_size + 1, stride)])
     # target for each window = value at the end of the window
-    y_train = targets[window_size - 1 :: stride][:n_windows]
-    if y_train.ndim == 1:
-        y_train = y_train[:, np.newaxis]
-    return X_train, y_train
+    y = targets[window_size - 1 :: stride][:n_windows]
+    if y.ndim == 1:
+        y = y[:, np.newaxis]
+    return X, y
 
 
+def get_tcn(batch_size, window_size, input_dim, TCN):
+    input_layer = Input(batch_shape=(batch_size, window_size, input_dim))
+    output_layer = TCN(return_sequences=False)(input_layer)
+    output_layer = Dense(1)(output_layer)
+    model = Model(inputs=[input_layer], outputs=[output_layer])
+    model.compile(optimizer="adam", loss="mse")
+    return model
 
-
-def main(model, folder, scaler):
+def main(model):
     for i, file in enumerate(data_folder.glob("*.nwb")):
-        if i==10:
-            break
         loaded_file = load_nwb(file_path=file)
         neural = loaded_file["neural_threshold_crossings"] # (T, C)
         targets = loaded_file["target_index_velocity"] # (T,) or (T, d)
-        X, y = make_windows(neural=neural, targets=targets, window_size=15, stride=1)
+        scaler = StandardScaler()
+        neural = scaler.fit_transform(neural)
+        targets = scaler.fit_transform(targets)
+        X_train, y_train = make_windows(neural=neural, targets=targets, window_size=15, stride=1)
         # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        model.fit(X_train, y_train, epochs=10)
+        if i==10:
+            break
+    model.predict()
 
 
 if __name__ == "__main__":
-    main(model=TCN(), folder=data_folder, scaler=StandardScaler)
+    main(model=get_tcn(batch_size=batch_size,
+                       window_size=window_size,
+                       input_dim=input_dim,
+                       TCN=TCN))
