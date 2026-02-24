@@ -1,4 +1,3 @@
-from IPython.utils.PyColorize import neutral_nt
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Input, Model
 from tcn import TCN
@@ -22,8 +21,8 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
     X = np.stack([neural[i : i + window_size] for i in range(0, T - window_size + 1, stride)])
     # target for each window = value at the end of the window
     y = targets[window_size - 1 :: stride][:n_windows]
-    if y.ndim == 1:
-        y = y[:, np.newaxis]
+    # if y.ndim == 1:
+    #     y = y[:, np.newaxis]
     return X, y
 
 
@@ -40,16 +39,26 @@ def main(model):
         loaded_file = load_nwb(file_path=file)
         neural = loaded_file["neural_threshold_crossings"] # (T, C)
         targets = loaded_file["target_index_velocity"] # (T,) or (T, d)
-        scaler = StandardScaler()
-        neural = scaler.fit_transform(neural)
-        targets = scaler.fit_transform(targets)
-        X_train, y_train = make_windows(neural=neural, targets=targets, window_size=15, stride=1)
+        # targets = targets if targets.ndim == 2 else targets.reshape(-1, 1)
+        neural_scaler = StandardScaler()
+        targets_scaler = StandardScaler()
+        train_neural = neural_scaler.fit_transform(neural)
+        train_targets = targets_scaler.fit_transform(targets if targets.ndim == 2
+                                                     else targets.reshape(-1, 1))
+        X_train, y_train = make_windows(neural=train_neural, targets=train_targets,
+                                        window_size=15, stride=1)
         # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
         model.fit(X_train, y_train, epochs=10)
         if i==10:
             neural_validation = loaded_file["neural_threshold_crossings"] # (T, C)
             targets_validation = loaded_file["target_index_velocity"] # (T,) or (T, d)
-            break
+            val_neural = neural_scaler.transform(neural_validation)
+            val_targets = targets_scaler.transform(targets_validation)
+        elif i==11:
+            neural_test = loaded_file["neural_threshold_crossings"] # (T, C)
+            targets_test = loaded_file["target_index_velocity"] # (T,) or (T, d)
+            test_neural = neural_scaler.transform(neural_test)
+            targets_neural = neural_scaler.transform(targets_test)
     model.predict()
 
 
