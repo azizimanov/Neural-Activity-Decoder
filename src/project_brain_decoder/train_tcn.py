@@ -47,6 +47,8 @@ def main(model):
         # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
         model.fit(X_train, y_train, epochs=10)
         if i==10:
+            neural_validation = loaded_file["neural_threshold_crossings"] # (T, C)
+            targets_validation = loaded_file["target_index_velocity"] # (T,) or (T, d)
             break
     model.predict()
 
