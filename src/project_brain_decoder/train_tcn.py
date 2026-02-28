@@ -59,7 +59,7 @@ def main(model):
             neural_test = loaded_file["neural_threshold_crossings"] # (T, C)
             targets_test = loaded_file["target_index_velocity"] # (T,) or (T, d)
             test_neural = neural_scaler.transform(neural_test)
-            targets_neural = neural_scaler.transform(targets_test)
+            targets_neural = targets_scaler.transform(targets_test)
     pred_velocity = model.predict()
 
 
