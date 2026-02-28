@@ -35,6 +35,7 @@ def get_tcn(batch_size, window_size, input_dim, TCN):
     return model
 
 def main(model):
+    # Looping through 12 files with indexing
     for i, file in enumerate(data_folder.glob("*.nwb")):
         loaded_file = load_nwb(file_path=file)
         neural = loaded_file["neural_threshold_crossings"] # (T, C)
@@ -59,7 +60,7 @@ def main(model):
             targets_test = loaded_file["target_index_velocity"] # (T,) or (T, d)
             test_neural = neural_scaler.transform(neural_test)
             targets_neural = neural_scaler.transform(targets_test)
-    model.predict()
+    pred_velocity = model.predict()
 
 
 if __name__ == "__main__":
