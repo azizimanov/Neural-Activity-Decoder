@@ -54,12 +54,14 @@ def main(model):
             neural_validation = loaded_file["neural_threshold_crossings"] # (T, C)
             targets_validation = loaded_file["target_index_velocity"] # (T,) or (T, d)
             val_neural = neural_scaler.transform(neural_validation)
-            val_targets = targets_scaler.transform(targets_validation)
+            val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
+                                                   else targets_validation.reshape(-1, 1))
         elif i==11:
             neural_test = loaded_file["neural_threshold_crossings"] # (T, C)
             targets_test = loaded_file["target_index_velocity"] # (T,) or (T, d)
             test_neural = neural_scaler.transform(neural_test)
-            targets_neural = targets_scaler.transform(targets_test)
+            targets_neural = targets_scaler.transform(targets_test if targets_test.ndim == 2
+                                                      else targets_test.reshape(-1, 1))
     pred_velocity = model.predict()
 
 
