@@ -36,23 +36,26 @@ def get_tcn(batch_size, window_size, input_dim, TCN):
 
 def main(model):
     # Looping through 12 files with indexing
-    for i, file in enumerate(data_folder.glob("*.nwb")):
+    files = list(data_folder.glob("*.nwb"))
+    train_files = files[:10]
+    val_file = files[10]
+    test_file = files[11]
+
+    for file in train_files:
         loaded_file = load_nwb(file_path=file)
         neural = loaded_file["neural_threshold_crossings"] # (T, C)
         targets = loaded_file["target_index_velocity"] # (T,) or (T, d)
-        # targets = targets if targets.ndim == 2 else targets.reshape(-1, 1)
         neural_scaler = StandardScaler()
         targets_scaler = StandardScaler()
-        train_neural = neural_scaler.fit_transform(neural)
-        train_targets = targets_scaler.fit_transform(targets if targets.ndim == 2
+        train_neural = neural_scaler.partial_fit(neural)
+        train_targets = targets_scaler.partial_fit(targets if targets.ndim == 2
                                                      else targets.reshape(-1, 1))
         X_train, y_train = make_windows(neural=train_neural, targets=train_targets,
                                         window_size=15, stride=1)
         # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
-        model.fit(X_train, y_train, epochs=10)
         if i==10:
             neural_validation = loaded_file["neural_threshold_crossings"] # (T, C)
-            targets_validation = loaded_file["target_index_velocity"] # (T,) or (T, d)
+            targets_validation = loaded_file["target_index_velocity"] # (T,) or (T, d)s
             val_neural = neural_scaler.transform(neural_validation)
             val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                    else targets_validation.reshape(-1, 1))
@@ -62,7 +65,8 @@ def main(model):
             test_neural = neural_scaler.transform(neural_test)
             targets_neural = targets_scaler.transform(targets_test if targets_test.ndim == 2
                                                       else targets_test.reshape(-1, 1))
-    pred_velocity = model.predict()
+            pred_velocity = model.predict(test_neural)
+        model.fit(X_train, y_train, epochs=10)
 
 
 if __name__ == "__main__":
