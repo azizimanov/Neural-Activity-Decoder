@@ -42,18 +42,25 @@ def main(model):
     test_file = files[11]
     neural_scaler = StandardScaler()
     targets_scaler = StandardScaler()
+    neural_list = []
+    targets_list = []
 
     for file in train_files:
         loaded_file = load_nwb(file_path=file)
-        neural = loaded_file["neural_threshold_crossings"] # (T, C)
-        targets = loaded_file["target_index_velocity"] # (T,) or (T, d)
-        train_neural = neural_scaler.partial_fit(neural)
-        train_targets = targets_scaler.partial_fit(targets if targets.ndim == 2
-                                                     else targets.reshape(-1, 1))
+        neural = loaded_file["neural_threshold_crossings"]
+        targets = loaded_file["target_index_velocity"] if loaded_file["target_index_velocity"].ndim == 2 \
+            else loaded_file["target_index_velocity"].reshape(-1, 1)
+        neural_list.append(neural)
+        targets_list.append(targets)
+    neural_all = np.concatenate(neural_list, axis=0)
+    targets_all = np.concatenate(targets_list, axis=0)
+    scaled_neural = neural_scaler.fit_transform(neural_all)
+    scaled_targets = targets_scaler.fit_transform(targets_all)
+    X_train, y_train = make_windows(neural=scaled_neural, targets=scaled_targets, window_size=15, stride=1)
+    tcn_model = model.fit(X_train, y_train, epochs=10)
 
-    X_train, y_train = make_windows(neural=train_neural, targets=train_targets,
-                                    window_size=15, stride=1)
-        # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
+    # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
+    # Validation
     load_val = load_nwb(val_file)
     neural_validation = load_val["neural_threshold_crossings"] # (T, C)
     targets_validation = load_val["target_index_velocity"] # (T,) or (T, d)s
@@ -61,8 +68,8 @@ def main(model):
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                else targets_validation.reshape(-1, 1))
     load_test = load_nwb(test_file)
-    neural_test = loaded_file["neural_threshold_crossings"] # (T, C)
-    targets_test = loaded_file["target_index_velocity"] # (T,) or (T, d)
+    neural_test = load_test["neural_threshold_crossings"] # (T, C)
+    targets_test = load_test["target_index_velocity"] # (T,) or (T, d)
     test_neural = neural_scaler.transform(neural_test)
     targets_neural = targets_scaler.transform(targets_test if targets_test.ndim == 2
                                               else targets_test.reshape(-1, 1))
@@ -72,7 +79,7 @@ def main(model):
 
 
         pred_velocity = model.predict(test_neural)
-        model.fit(X_train, y_train, epochs=10)
+
 
 
 if __name__ == "__main__":
