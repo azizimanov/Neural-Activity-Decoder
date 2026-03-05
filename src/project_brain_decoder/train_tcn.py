@@ -59,6 +59,7 @@ def main(model):
     X_train, y_train = make_windows(neural=scaled_neural, targets=scaled_targets, window_size=15, stride=1)
     tcn_model = model.fit(X_train, y_train, epochs=10)
 
+
     # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
     # Validation
     load_val = load_nwb(val_file)
@@ -67,18 +68,21 @@ def main(model):
     val_neural = neural_scaler.transform(neural_validation)
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                else targets_validation.reshape(-1, 1))
+    X_val, y_val = make_windows(neural=val_neural, targets=val_targets, window_size=15, stride=1)
+    val_pred = tcn_model.predict(X_val)
+
+
+
+    # Test
     load_test = load_nwb(test_file)
     neural_test = load_test["neural_threshold_crossings"] # (T, C)
     targets_test = load_test["target_index_velocity"] # (T,) or (T, d)
     test_neural = neural_scaler.transform(neural_test)
-    targets_neural = targets_scaler.transform(targets_test if targets_test.ndim == 2
+    test_targets = targets_scaler.transform(targets_test if targets_test.ndim == 2
                                               else targets_test.reshape(-1, 1))
+    X_test, y_test = make_windows(neural=test_neural, targets=test_neural, window_size=15, stride=1)
+    test_pred = tcn_model.predict(X_test)
 
-    train_neural = neural_scaler.transform(train_neural)
-    train_targets = targets_scaler.transform(train_targets)
-
-
-        pred_velocity = model.predict(test_neural)
 
 
 
