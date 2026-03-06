@@ -1,14 +1,15 @@
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.models import Input, Model
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.models import Model
 from tcn import TCN
 import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from project_brain_decoder.config import get_project_root
-from src.project_brain_decoder.io.nwb_loader import load_nwb
+from project_brain_decoder.io.nwb_loader import load_nwb
+from sklearn.metrics import r2_score
 
 
-data_folder = get_project_root() / "data" / "raw"
+data_folder = get_project_root() / "data" / "preprocessed"
 batch_size, window_size, input_dim = 64, 15, 96
 
 def make_windows(neural: np.array, # shape(T, C) - time * channels
@@ -57,7 +58,7 @@ def main(model):
     scaled_neural = neural_scaler.fit_transform(neural_all)
     scaled_targets = targets_scaler.fit_transform(targets_all)
     X_train, y_train = make_windows(neural=scaled_neural, targets=scaled_targets, window_size=15, stride=1)
-    tcn_model = model.fit(X_train, y_train, epochs=10)
+    model.fit(X_train, y_train, epochs=1)
 
 
     # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
@@ -69,8 +70,9 @@ def main(model):
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                else targets_validation.reshape(-1, 1))
     X_val, y_val = make_windows(neural=val_neural, targets=val_targets, window_size=15, stride=1)
-    val_pred = tcn_model.predict(X_val)
-
+    val_pred = model.predict(X_val)
+    val_score = r2_score(y_true=y_val, y_pred=val_pred)
+    print("Validation score: ", val_score)
 
 
     # Test
@@ -80,8 +82,11 @@ def main(model):
     test_neural = neural_scaler.transform(neural_test)
     test_targets = targets_scaler.transform(targets_test if targets_test.ndim == 2
                                               else targets_test.reshape(-1, 1))
-    X_test, y_test = make_windows(neural=test_neural, targets=test_neural, window_size=15, stride=1)
-    test_pred = tcn_model.predict(X_test)
+    X_test, y_test = make_windows(neural=test_neural, targets=test_targets, window_size=15, stride=1)
+    test_pred = model.predict(X_test)
+    test_score = r2_score(y_true=y_test, y_pred=test_pred)
+    print("Test score: ", test_score)
+
 
 
 
