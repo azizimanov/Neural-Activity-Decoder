@@ -11,7 +11,7 @@ from sklearn.metrics import r2_score
 
 
 data_folder = get_project_root() / "data" / "raw"
-batch_size, window_size, input_dim = 64, 15, 96
+batch_size, window_size, input_dim = 64, 15, 192
 
 def make_windows(neural: np.array, # shape(T, C) - time * channels
                  targets: np.array, # shape(T,) or (T, out_dim)
@@ -30,7 +30,8 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
 
 def get_tcn(batch_size, window_size, input_dim, TCN):
     input_layer = Input(batch_shape=(batch_size, window_size, input_dim))
-    output_layer = TCN(return_sequences=False, dropout_rate=0.2)(input_layer)
+    output_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8],
+                       return_sequences=False, dropout_rate=0.3)(input_layer)
     output_layer = Dense(1)(output_layer)
     model = Model(inputs=[input_layer], outputs=[output_layer])
     model.compile(optimizer="adam", loss="mse")
@@ -49,7 +50,9 @@ def main(model):
 
     for file in train_files:
         loaded_file = load_nwb(file_path=file)
-        neural = loaded_file["neural_threshold_crossings"]
+        spiking = loaded_file["neural_spiking_band"]
+        threshold = loaded_file["neural_threshold_crossings"]
+        neural = np.concatenate([spiking, threshold], axis=1)
         targets = loaded_file["target_index_velocity"] if loaded_file["target_index_velocity"].ndim == 2 \
             else loaded_file["target_index_velocity"].reshape(-1, 1)
         neural_list.append(neural)
@@ -64,12 +67,14 @@ def main(model):
     # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
     # Validation
     load_val = load_nwb(val_file)
-    neural_validation = load_val["neural_threshold_crossings"] # (T, C)
+    val_spike = load_val["neural_spiking_band"]
+    val_thresh = load_val["neural_threshold_crossings"] # (T, C)
+    neural_val = np.concatenate([val_spike, val_thresh], axis=1)
     targets_validation = load_val["target_index_velocity"] # (T,) or (T, d)s
-    val_neural = neural_scaler.transform(neural_validation)
+    val_transformed = neural_scaler.transform(neural_val)
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                else targets_validation.reshape(-1, 1))
-    X_val, y_val = make_windows(neural=val_neural, targets=val_targets, window_size=15, stride=1)
+    X_val, y_val = make_windows(neural=val_transformed, targets=val_targets, window_size=15, stride=1)
     model.fit(X_train, y_train, epochs=3, validation_data=(X_val, y_val),
               callbacks=[EarlyStopping(patience=3, restore_best_weights=True)])
     val_pred = model.predict(X_val)
@@ -79,12 +84,14 @@ def main(model):
 
     # Test
     load_test = load_nwb(test_file)
-    neural_test = load_test["neural_threshold_crossings"] # (T, C)
+    test_spike = load_test["neural_spiking_band"]
+    test_thresh = load_test["neural_threshold_crossings"] # (T, C)
+    neural_test = np.concatenate([test_spike, test_thresh], axis=1)
     targets_test = load_test["target_index_velocity"] # (T,) or (T, d)
-    test_neural = neural_scaler.transform(neural_test)
+    test_transformed = neural_scaler.transform(neural_test)
     test_targets = targets_scaler.transform(targets_test if targets_test.ndim == 2
                                               else targets_test.reshape(-1, 1))
-    X_test, y_test = make_windows(neural=test_neural, targets=test_targets, window_size=15, stride=1)
+    X_test, y_test = make_windows(neural=test_transformed, targets=test_targets, window_size=15, stride=1)
     test_pred = model.predict(X_test)
     test_score = r2_score(y_true=y_test, y_pred=test_pred)
     print("Test score: ", test_score)
