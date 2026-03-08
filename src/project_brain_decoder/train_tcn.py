@@ -1,6 +1,8 @@
 from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.optimizers import Adam
+import tensorflow as tf
 from tcn import TCN
 import numpy as np
 from pathlib import Path
@@ -9,6 +11,8 @@ from project_brain_decoder.config import get_project_root
 from project_brain_decoder.io.nwb_loader import load_nwb
 from sklearn.metrics import r2_score
 
+tf.random.set_seed(42)
+np.random.seed(42)
 
 data_folder = get_project_root() / "data" / "raw"
 batch_size, window_size, input_dim = 64, 15, 192
@@ -30,11 +34,12 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
 
 def get_tcn(batch_size, window_size, input_dim, TCN):
     input_layer = Input(batch_shape=(batch_size, window_size, input_dim))
-    output_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8],
+    output_layer = TCN(nb_filters=32, kernel_size=8, dilations=[1, 2, 4, 8, 16],
                        return_sequences=False, dropout_rate=0.3)(input_layer)
     output_layer = Dense(1)(output_layer)
     model = Model(inputs=[input_layer], outputs=[output_layer])
-    model.compile(optimizer="adam", loss="mse")
+    # model.compile(optimizer="adam", loss="mse")
+    model.compile(optimizer=Adam(learning_rate=0.0005), loss='mse')
     return model
 
 def main(model):
@@ -75,7 +80,7 @@ def main(model):
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                else targets_validation.reshape(-1, 1))
     X_val, y_val = make_windows(neural=val_transformed, targets=val_targets, window_size=15, stride=1)
-    model.fit(X_train, y_train, epochs=3, validation_data=(X_val, y_val),
+    model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val),
               callbacks=[EarlyStopping(patience=3, restore_best_weights=True)])
     val_pred = model.predict(X_val)
     val_score = r2_score(y_true=y_val, y_pred=val_pred)
