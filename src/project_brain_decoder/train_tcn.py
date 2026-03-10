@@ -101,6 +101,7 @@ def main(model):
     test_score = r2_score(y_true=y_test, y_pred=test_pred)
     print("Test score: ", test_score)
 
+    # Save val and test scores
     Path(get_project_root() / "results").mkdir(exist_ok=True)
     df = pd.DataFrame(data={"Validation": [val_score], "Test": [test_score]})
     df.to_csv(path_or_buf=get_project_root() / "results" / "tcn_r2.csv", index=False)
