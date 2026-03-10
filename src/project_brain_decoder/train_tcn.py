@@ -4,6 +4,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
 from tcn import TCN
+import pandas as pd
 import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
@@ -15,7 +16,7 @@ tf.random.set_seed(42)
 np.random.seed(42)
 
 data_folder = get_project_root() / "data" / "raw"
-batch_size, window_size, input_dim = 64, 15, 192
+batch_size, window_size, input_dim = 128, 15, 192
 
 def make_windows(neural: np.array, # shape(T, C) - time * channels
                  targets: np.array, # shape(T,) or (T, out_dim)
@@ -34,11 +35,10 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
 
 def get_tcn(batch_size, window_size, input_dim, TCN):
     input_layer = Input(batch_shape=(batch_size, window_size, input_dim))
-    output_layer = TCN(nb_filters=32, kernel_size=8, dilations=[1, 2, 4, 8, 16],
+    output_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8, 16],
                        return_sequences=False, dropout_rate=0.3)(input_layer)
     output_layer = Dense(1)(output_layer)
     model = Model(inputs=[input_layer], outputs=[output_layer])
-    # model.compile(optimizer="adam", loss="mse")
     model.compile(optimizer=Adam(learning_rate=0.0005), loss='mse')
     return model
 
@@ -100,6 +100,11 @@ def main(model):
     test_pred = model.predict(X_test)
     test_score = r2_score(y_true=y_test, y_pred=test_pred)
     print("Test score: ", test_score)
+
+    Path(get_project_root() / "results").mkdir(exist_ok=True)
+    df = pd.DataFrame(data={"Validation": [val_score], "Test": [test_score]})
+    df.to_csv(path_or_buf=get_project_root() / "results" / "tcn_r2.csv", index=False)
+
 
 
 
