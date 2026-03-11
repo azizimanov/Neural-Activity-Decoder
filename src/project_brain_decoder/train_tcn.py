@@ -33,8 +33,8 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
     return X, y
 
 
-def get_tcn(batch_size, window_size, input_dim, TCN):
-    input_layer = Input(batch_shape=(batch_size, window_size, input_dim))
+def get_tcn(window_size, input_dim, TCN):
+    input_layer = Input(shape=(window_size, input_dim))
     output_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8, 16],
                        return_sequences=False, dropout_rate=0.3)(input_layer)
     output_layer = Dense(1)(output_layer)
@@ -66,6 +66,9 @@ def main(model):
     targets_all = np.concatenate(targets_list, axis=0)
     scaled_neural = neural_scaler.fit_transform(neural_all)
     scaled_targets = targets_scaler.fit_transform(targets_all)
+    movement_mask = np.abs(scaled_targets.squeeze()) > 0.05
+    scaled_neural = scaled_neural[movement_mask]
+    scaled_targets = scaled_targets[movement_mask]
     X_train, y_train = make_windows(neural=scaled_neural, targets=scaled_targets, window_size=15, stride=1)
 
 
@@ -79,10 +82,13 @@ def main(model):
     val_transformed = neural_scaler.transform(neural_val)
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                else targets_validation.reshape(-1, 1))
+    val_mov_mask = np.abs(val_targets.squeeze()) > 0.05
+    val_transformed = val_transformed[val_mov_mask]
+    val_targets = val_targets[val_mov_mask]
     X_val, y_val = make_windows(neural=val_transformed, targets=val_targets, window_size=15, stride=1)
-    model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val),
+    model.fit(X_train, y_train, batch_size=batch_size, epochs=10, validation_data=(X_val, y_val),
               callbacks=[EarlyStopping(patience=3, restore_best_weights=True)])
-    val_pred = model.predict(X_val)
+    val_pred = model.predict(X_val, batch_size=batch_size)
     val_score = r2_score(y_true=y_val, y_pred=val_pred)
     print("Validation score: ", val_score)
 
@@ -96,8 +102,11 @@ def main(model):
     test_transformed = neural_scaler.transform(neural_test)
     test_targets = targets_scaler.transform(targets_test if targets_test.ndim == 2
                                               else targets_test.reshape(-1, 1))
+    test_mov_mask = np.abs(test_targets.squeeze()) > 0.05
+    test_transformed = test_transformed[test_mov_mask]
+    test_targets = test_targets[test_mov_mask]
     X_test, y_test = make_windows(neural=test_transformed, targets=test_targets, window_size=15, stride=1)
-    test_pred = model.predict(X_test)
+    test_pred = model.predict(X_test, batch_size=batch_size)
     test_score = r2_score(y_true=y_test, y_pred=test_pred)
     print("Test score: ", test_score)
 
@@ -112,7 +121,6 @@ def main(model):
 
 
 if __name__ == "__main__":
-    main(model=get_tcn(batch_size=batch_size,
-                       window_size=window_size,
+    main(model=get_tcn(window_size=window_size,
                        input_dim=input_dim,
                        TCN=TCN))
