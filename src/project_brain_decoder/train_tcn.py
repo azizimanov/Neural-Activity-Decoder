@@ -16,7 +16,7 @@ tf.random.set_seed(42)
 np.random.seed(42)
 
 data_folder = get_project_root() / "data" / "raw"
-batch_size, window_size, input_dim = 128, 15, 192
+batch_size, window_size, input_dim = 128, 30, 192
 
 def make_windows(neural: np.array, # shape(T, C) - time * channels
                  targets: np.array, # shape(T,) or (T, out_dim)
@@ -28,8 +28,6 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
     X = np.stack([neural[i : i + window_size] for i in range(0, T - window_size + 1, stride)])
     # target for each window = value at the end of the window
     y = targets[window_size - 1 :: stride][:n_windows]
-    # if y.ndim == 1:
-    #     y = y[:, np.newaxis]
     return X, y
 
 
@@ -58,18 +56,15 @@ def main(model):
         spiking = loaded_file["neural_spiking_band"]
         threshold = loaded_file["neural_threshold_crossings"]
         neural = np.concatenate([spiking, threshold], axis=1)
-        targets = loaded_file["target_index_velocity"] if loaded_file["target_index_velocity"].ndim == 2 \
-            else loaded_file["target_index_velocity"].reshape(-1, 1)
+        targets = loaded_file["target_mrs_velocity"] if loaded_file["target_mrs_velocity"].ndim == 2 \
+            else loaded_file["target_mrs_velocity"].reshape(-1, 1)
         neural_list.append(neural)
         targets_list.append(targets)
     neural_all = np.concatenate(neural_list, axis=0)
     targets_all = np.concatenate(targets_list, axis=0)
     scaled_neural = neural_scaler.fit_transform(neural_all)
     scaled_targets = targets_scaler.fit_transform(targets_all)
-    movement_mask = np.abs(scaled_targets.squeeze()) > 0.05
-    scaled_neural = scaled_neural[movement_mask]
-    scaled_targets = scaled_targets[movement_mask]
-    X_train, y_train = make_windows(neural=scaled_neural, targets=scaled_targets, window_size=15, stride=1)
+    X_train, y_train = make_windows(neural=scaled_neural, targets=scaled_targets, window_size=30, stride=1)
 
 
     # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
@@ -78,16 +73,13 @@ def main(model):
     val_spike = load_val["neural_spiking_band"]
     val_thresh = load_val["neural_threshold_crossings"] # (T, C)
     neural_val = np.concatenate([val_spike, val_thresh], axis=1)
-    targets_validation = load_val["target_index_velocity"] # (T,) or (T, d)s
+    targets_validation = load_val["target_mrs_velocity"] # (T,) or (T, d)s
     val_transformed = neural_scaler.transform(neural_val)
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                                else targets_validation.reshape(-1, 1))
-    val_mov_mask = np.abs(val_targets.squeeze()) > 0.05
-    val_transformed = val_transformed[val_mov_mask]
-    val_targets = val_targets[val_mov_mask]
-    X_val, y_val = make_windows(neural=val_transformed, targets=val_targets, window_size=15, stride=1)
-    model.fit(X_train, y_train, batch_size=batch_size, epochs=10, validation_data=(X_val, y_val),
-              callbacks=[EarlyStopping(patience=3, restore_best_weights=True)])
+    X_val, y_val = make_windows(neural=val_transformed, targets=val_targets, window_size=30, stride=1)
+    model.fit(X_train, y_train, batch_size=batch_size, epochs=20, validation_data=(X_val, y_val),
+              callbacks=[EarlyStopping(patience=5, restore_best_weights=True)])
     val_pred = model.predict(X_val, batch_size=batch_size)
     val_score = r2_score(y_true=y_val, y_pred=val_pred)
     print("Validation score: ", val_score)
@@ -98,14 +90,11 @@ def main(model):
     test_spike = load_test["neural_spiking_band"]
     test_thresh = load_test["neural_threshold_crossings"] # (T, C)
     neural_test = np.concatenate([test_spike, test_thresh], axis=1)
-    targets_test = load_test["target_index_velocity"] # (T,) or (T, d)
+    targets_test = load_test["target_mrs_velocity"] # (T,) or (T, d)
     test_transformed = neural_scaler.transform(neural_test)
     test_targets = targets_scaler.transform(targets_test if targets_test.ndim == 2
                                               else targets_test.reshape(-1, 1))
-    test_mov_mask = np.abs(test_targets.squeeze()) > 0.05
-    test_transformed = test_transformed[test_mov_mask]
-    test_targets = test_targets[test_mov_mask]
-    X_test, y_test = make_windows(neural=test_transformed, targets=test_targets, window_size=15, stride=1)
+    X_test, y_test = make_windows(neural=test_transformed, targets=test_targets, window_size=30, stride=1)
     test_pred = model.predict(X_test, batch_size=batch_size)
     test_score = r2_score(y_true=y_test, y_pred=test_pred)
     print("Test score: ", test_score)
