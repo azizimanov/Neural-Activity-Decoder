@@ -37,12 +37,15 @@ def download_session(url: tuple[str, str]):
     :param url: tuple[str, str]
     :return:
     """
+    root = get_project_root()
+    path = root / "data" / "raw" / url[1]
+    if path.exists():
+        print(f"Session {url[1]} already exists. Skipping.")
+        return
+    if not path.parent.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(url[0], stream=True) as r:
         r.raise_for_status()
-        root = get_project_root()
-        path = root / "data" / "raw" / url[1]
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
         with open(path.as_posix(), "wb") as f:
             chunk_size = 4*1024*1024
             for chunk in r.iter_content(chunk_size):
