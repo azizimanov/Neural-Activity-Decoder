@@ -51,4 +51,8 @@ def download_session(url: tuple[str, str]):
         return
 
 
-download_session(url=SESSION_URLS["session1"])
+
+if __name__ == "__main__":
+    for name, url in SESSION_URLS.items():
+        print(f"Downloading: {name}...")
+        download_session(url=url)
