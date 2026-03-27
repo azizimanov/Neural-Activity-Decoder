@@ -1,7 +1,7 @@
-from tensorflow.keras.layers import Input, Dense
-from tensorflow.keras.models import Model
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
+from keras.layers import Input, Dense
+from keras.models import Model
+from keras.callbacks import EarlyStopping
+from keras.optimizers import Adam
 import tensorflow as tf
 from tcn import TCN
 import pandas as pd
