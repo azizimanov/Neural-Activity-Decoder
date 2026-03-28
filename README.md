@@ -21,5 +21,5 @@ Encountered issues and solutions:
 1) when I wanted to access the .data[:], apparently when with NWBHDF5IO(...) as io: block ends, the file handle closes 
 hence the data was not reachable. So I decided to save the np.arrays inside the IO context for future use.
 
-2) because the data in LINK dataset is sequential (daily recordings) I was required to train the Linear Ridge (baseline)
+2) because the data in LINK dataset is sequential (daily recordings) I trained the Linear Ridge (baseline)
 model with first few sessions so that this model does not see the future sessions during training.
