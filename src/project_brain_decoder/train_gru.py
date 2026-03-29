@@ -1,8 +1,8 @@
-from tensorflow.keras.layers import GRU
-from tensorflow.keras.layers import Input, Dense
-from tensorflow.keras.models import Model
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
+from keras.layers import GRU
+from keras.layers import Input, Dense
+from keras.models import Model
+from keras.callbacks import EarlyStopping
+from keras.optimizers import Adam
 import tensorflow as tf
 import pandas as pd
 import numpy as np
@@ -33,7 +33,7 @@ def make_windows(neural: np.array, # shape(T, C) - time * channels
 
 def get_gru(window_size, input_dim, GRU):
     input_layer = Input(shape=(window_size, input_dim))
-    output_layer = GRU(units=32, dropout_rate=0.3)(input_layer)
+    output_layer = GRU(units=64, dropout=0.3)(input_layer)
     output_layer = Dense(1)(output_layer)
     model = Model(inputs=[input_layer], outputs=[output_layer])
     model.compile(optimizer=Adam(learning_rate=0.0005), loss='mse')
@@ -77,7 +77,7 @@ def main(model):
     val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
                                            else targets_validation.reshape(-1, 1))
     X_val, y_val = make_windows(neural=val_transformed, targets=val_targets, window_size=30, stride=1)
-    model.fit(X_train, y_train, batch_size=batch_size, epochs=1, validation_data=(X_val, y_val),
+    model.fit(X_train, y_train, batch_size=batch_size, epochs=10, validation_data=(X_val, y_val),
               callbacks=[EarlyStopping(patience=5, restore_best_weights=True)])
     val_pred = model.predict(X_val, batch_size=batch_size)
     val_score = r2_score(y_true=y_val, y_pred=val_pred)
