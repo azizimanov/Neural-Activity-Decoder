@@ -3,6 +3,7 @@ requests~=2.32.5
 scikit-learn~=1.8.0
 numpy~=2.4.0
 tensorflow~=2.18.0
+keras~=3.13.2
 keras-tcn~=3.5.6
 filterpy~=1.4.5
 dandi~=0.74.3
