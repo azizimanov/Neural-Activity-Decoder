@@ -24,3 +24,14 @@ class PositionalEncoder(Layer):
 
 
 
+class TransformerDecoder:
+    """Transformer-based neural decoder for 2D motor velocity prediction."""
+
+    def __init__(self, window_size, input_dim, batch_size, stride):
+        self.window_size = window_size
+        self.input_dim = input_dim
+        self.batch_size = batch_size
+        self.stride = stride
+        self.model = self._build_model()
+
+
