@@ -35,3 +35,27 @@ class TransformerDecoder:
         self.model = self._build_model()
 
 
+    def _build_model(self):
+        """Builds the transformer architecture with one attention block and a feed-forward block."""
+        input_layer = Input(shape=(self.window_size, self.input_dim))
+        pos_encoded = PositionalEncoder(self.window_size, self.input_dim)(input_layer)
+        drop_out_1 = Dropout(0.1)(pos_encoded)
+
+        # Multi-head self-attention + residual connection
+        attention_1 = MultiHeadAttention(num_heads=4, key_dim=48)(drop_out_1, drop_out_1)
+        drop_out_2 = Dropout(0.1)(attention_1)
+        skip_1 = LayerNormalization()(drop_out_2 + pos_encoded)
+
+        # Feed-forward block + residual connection
+        dense_1 = Dense(units=128, activation="relu")(skip_1)
+        drop_out_3 = Dropout(0.1)(dense_1)
+        dense_2 = Dense(units=192)(drop_out_3)
+        skip_2 = LayerNormalization()(dense_2 + skip_1)
+
+        # Pool across timesteps and project to 2D velocity output
+        avg_pool = GlobalAveragePooling1D()(skip_2)
+        output = Dense(units=2)(avg_pool)
+
+        model = Model(inputs=[input_layer], outputs=[output])
+        model.compile(optimizer=Adam(learning_rate=0.0005), loss="mse")
+        return model
