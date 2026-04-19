@@ -67,3 +67,6 @@ class TransformerDecoder:
         self.model.fit(train_ds, epochs=20, steps_per_epoch=n_train_steps,
                        validation_data=val_ds, validation_steps=n_val_steps,
                        callbacks=[EarlyStopping(patience=3, restore_best_weights=True), reduce_lr])
+
+
+    
