@@ -47,3 +47,12 @@ def make_dataset(file_list: list,
         ds = ds.shuffle(buffer_size=10_000)
     ds = ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     return ds
+
+def count_windows(file_list: list, window_size: int, stride: int) -> int:
+    """Counts total number of windows across all sessions for steps_per_epoch."""
+    total = 0
+    for file in file_list:
+        session = load_nwb(file)
+        T = session["neural_spiking_band"].shape[0]
+        total += (T - window_size + 1) // stride
+    return total
