@@ -37,3 +37,11 @@ test_ds = make_dataset(test, window_size, stride, input_dim, batch_size).repeat(
 # Train
 decoder = TransformerDecoder(window_size, input_dim, batch_size, stride)
 decoder.fit(train_ds=train_ds, val_ds=val_ds, n_train_steps=n_train_steps, n_val_steps=n_val_steps)
+
+# Fine-tune and evaluate on test sessions
+mean_r2 = decoder.fine_tune(test[:5], make_windows)
+print(f"Index vel. R²: {mean_r2[0]:.4f}. MRS vel. R²: {mean_r2[1]:.4f}")
+
+# Save model and scores
+decoder.save(get_project_root() / "models" / "transformer.keras")
+save_r2.get_scores(model="transformer",score1=mean_r2[0], score2=mean_r2[1])
