@@ -3,9 +3,7 @@ sys.path.append("/content/drive/MyDrive/Project-Brain-Decoder/src")
 
 import numpy as np
 import tensorflow as tf
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from project_brain_decoder.config import get_project_root
-from project_brain_decoder.io.nwb_loader import load_nwb
 from project_brain_decoder.io.dataset import make_windows, make_dataset, count_windows
 from project_brain_decoder.models.transformer import TransformerDecoder
 from results import save_r2
