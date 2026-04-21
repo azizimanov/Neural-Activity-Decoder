@@ -75,3 +75,8 @@ class GRUDecoder:
             r2 = r2_score(y_eval, y_pred, multioutput="raw_values")
             r2_list.append(r2)
 
+        return np.mean(r2_list, axis=0)
+
+    def save(self, path):
+        """Save the trained model to disk"""
+        self.model.save(path)
