@@ -6,4 +6,5 @@ from project_brain_decoder.models.gru import GRUDecoder
 from results import save_r2
 
 
-
+tf.random.set_seed(42)
+np.random.seed(42)
