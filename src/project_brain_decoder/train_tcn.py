@@ -32,9 +32,9 @@ def get_tcn(window_size, input_dim):
 def main():
     folder = get_project_root() / "data" / "raw"
     files = list(folder.glob("*.nwb"))
-    train_files = files[:10]
-    val_files = [files[10]]
-    test_files = [files[11]]
+    train_files = files[:187]
+    val_files = files[187:249]
+    test_files = files[249:]
 
     # Count steps
     n_train_steps = count_windows(train_files, window_size, stride) // batch_size
