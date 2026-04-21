@@ -1,6 +1,3 @@
-import sys
-sys.path.append("/content/drive/MyDrive/Project-Brain-Decoder/src")
-
 import numpy as np
 import tensorflow as tf
 from project_brain_decoder.config import get_project_root
