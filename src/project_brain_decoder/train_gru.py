@@ -12,3 +12,10 @@ np.random.seed(42)
 # Hyperparameters
 batch_size, window_size, input_dim = 128, 55, 192
 stride = 5
+
+# Load and split files
+folder = get_project_root() / "data" / "raw"
+files = list(folder.glob("*.nwb"))
+train = files[:187]
+val = files[187:249]
+test = files[249:]
