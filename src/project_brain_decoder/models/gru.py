@@ -36,3 +36,15 @@ class GRUDecoder:
                        validation_data=val_ds, validation_steps=n_val_steps,
                        callbacks=[EarlyStopping(patience=3, restore_best_weights=True), reduce_lr])
 
+    def fine_tune(self, test_files, make_windows):
+        """Freezes GRU layers and fine-tunes the output Dense layer per test session"""
+        for layer in self.model.layers:
+            if isinstance(layer, GRU):
+                layer.trainable = False
+        self.model.compile(optimizer=Adam(learning_rate=0.0005), loss="mse")
+
+        # Save base weights to reset between sessions
+        dense_layer = [l for l in self.model.layers if isinstance(l, Dense)][-1]
+        base_dense_weights = dense_layer.get_weights()
+
+
