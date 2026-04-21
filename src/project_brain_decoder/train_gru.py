@@ -29,3 +29,7 @@ n_test_steps = count_windows(test, window_size, stride) // batch_size
 train_ds = make_dataset(train, window_size, stride, input_dim, batch_size, shuffle=True).repeat()
 val_ds = make_dataset(val, window_size, stride, input_dim, batch_size).repeat()
 test_ds = make_dataset(test, window_size, stride, input_dim, batch_size).repeat()
+
+# Train
+decoder = GRUDecoder(window_size, input_dim, batch_size, stride)
+decoder.fit(train_ds=train_ds, val_ds=val_ds, n_train_steps=n_train_steps, n_val_steps=n_val_steps)
