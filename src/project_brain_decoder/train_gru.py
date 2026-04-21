@@ -8,3 +8,7 @@ from results import save_r2
 
 tf.random.set_seed(42)
 np.random.seed(42)
+
+# Hyperparameters
+batch_size, window_size, input_dim = 128, 55, 192
+stride = 5
