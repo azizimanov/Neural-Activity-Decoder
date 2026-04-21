@@ -25,3 +25,7 @@ n_train_steps = count_windows(train, window_size, stride) // batch_size
 n_val_steps = count_windows(val, window_size, stride) // batch_size
 n_test_steps = count_windows(test, window_size, stride) // batch_size
 
+# Build datasets
+train_ds = make_dataset(train, window_size, stride, input_dim, batch_size, shuffle=True).repeat()
+val_ds = make_dataset(val, window_size, stride, input_dim, batch_size).repeat()
+test_ds = make_dataset(test, window_size, stride, input_dim, batch_size).repeat()
