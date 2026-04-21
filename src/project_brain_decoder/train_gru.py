@@ -19,3 +19,9 @@ files = list(folder.glob("*.nwb"))
 train = files[:187]
 val = files[187:249]
 test = files[249:]
+
+# Count steps
+n_train_steps = count_windows(train, window_size, stride) // batch_size
+n_val_steps = count_windows(val, window_size, stride) // batch_size
+n_test_steps = count_windows(test, window_size, stride) // batch_size
+
