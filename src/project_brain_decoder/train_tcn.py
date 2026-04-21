@@ -1,115 +1,80 @@
+import numpy as np
+import tensorflow as tf
 from keras.layers import Input, Dense
 from keras.models import Model
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.optimizers import Adam
-import tensorflow as tf
 from tcn import TCN
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from sklearn.preprocessing import StandardScaler
 from project_brain_decoder.config import get_project_root
-from project_brain_decoder.io.nwb_loader import load_nwb
+from project_brain_decoder.io.dataset import make_dataset, make_windows, count_windows
+from results import save_r2
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 
 tf.random.set_seed(42)
 np.random.seed(42)
 
-data_folder = get_project_root() / "data" / "raw"
+# Hyperparameters
 batch_size, window_size, input_dim = 128, 30, 192
-
-def make_windows(neural: np.array, # shape(T, C) - time * channels
-                 targets: np.array, # shape(T,) or (T, out_dim)
-                 window_size: int,
-                 stride: int=1) -> tuple[np.array, np.array]:
-    """Slice into (window_size, C) windows; targets aligned to last timestep of each window"""
-    T, C = neural.shape
-    n_windows = (T - window_size) // stride + 1
-    X = np.stack([neural[i : i + window_size] for i in range(0, T - window_size + 1, stride)])
-    # target for each window = value at the end of the window
-    y = targets[window_size - 1 :: stride][:n_windows]
-    return X, y
+stride = 5
 
 
-def get_tcn(window_size, input_dim, TCN):
+def get_tcn(window_size, input_dim):
     input_layer = Input(shape=(window_size, input_dim))
-    output_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8, 16],
+    tcn_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8, 16],
                        return_sequences=False, dropout_rate=0.3)(input_layer)
-    output_layer = Dense(1)(output_layer)
+    output_layer = Dense(2)(tcn_layer)
     model = Model(inputs=[input_layer], outputs=[output_layer])
     model.compile(optimizer=Adam(learning_rate=0.0005), loss='mse')
     return model
 
-def main(model):
-    # Looping through 12 files with indexing
-    files = list(data_folder.glob("*.nwb"))
+
+def main():
+    folder = get_project_root() / "data" / "raw"
+    files = list(folder.glob("*.nwb"))
     train_files = files[:10]
-    val_file = files[10]
-    test_file = files[11]
-    neural_scaler = StandardScaler()
-    targets_scaler = StandardScaler()
-    neural_list = []
-    targets_list = []
+    val_files = [files[10]]
+    test_files = [files[11]]
 
-    for file in train_files:
-        loaded_file = load_nwb(file_path=file)
-        spiking = loaded_file["neural_spiking_band"]
-        threshold = loaded_file["neural_threshold_crossings"]
-        neural = np.concatenate([spiking, threshold], axis=1)
-        targets = loaded_file["target_mrs_velocity"] if loaded_file["target_mrs_velocity"].ndim == 2 \
-            else loaded_file["target_mrs_velocity"].reshape(-1, 1)
-        neural_list.append(neural)
-        targets_list.append(targets)
-    neural_all = np.concatenate(neural_list, axis=0)
-    targets_all = np.concatenate(targets_list, axis=0)
-    scaled_neural = neural_scaler.fit_transform(neural_all)
-    scaled_targets = targets_scaler.fit_transform(targets_all)
-    X_train, y_train = make_windows(neural=scaled_neural, targets=scaled_targets, window_size=30, stride=1)
+    # Count steps
+    n_train_steps = count_windows(train_files, window_size, stride) // batch_size
+    n_val_steps = count_windows(val_files, window_size, stride) // batch_size
 
+    # Build generator-based datasets with per-session scaling
+    train_ds = make_dataset(train_files, window_size, stride, input_dim, batch_size, shuffle=True).repeat()
+    val_ds = make_dataset(val_files, window_size, stride, input_dim, batch_size).repeat()
 
-    # X: (n_windows, 15, C), y: (n_windows, ) or (n_windows, d)
-    # Validation
-    load_val = load_nwb(val_file)
-    val_spike = load_val["neural_spiking_band"]
-    val_thresh = load_val["neural_threshold_crossings"] # (T, C)
-    neural_val = np.concatenate([val_spike, val_thresh], axis=1)
-    targets_validation = load_val["target_mrs_velocity"] # (T,) or (T, d)s
-    val_transformed = neural_scaler.transform(neural_val)
-    val_targets = targets_scaler.transform(targets_validation if targets_validation.ndim == 2
-                                               else targets_validation.reshape(-1, 1))
-    X_val, y_val = make_windows(neural=val_transformed, targets=val_targets, window_size=30, stride=1)
-    model.fit(X_train, y_train, batch_size=batch_size, epochs=20, validation_data=(X_val, y_val),
-              callbacks=[EarlyStopping(patience=5, restore_best_weights=True)])
-    val_pred = model.predict(X_val, batch_size=batch_size)
-    val_score = r2_score(y_true=y_val, y_pred=val_pred)
-    print("Validation score: ", val_score)
+    # Train
+    model = get_tcn(window_size, input_dim)
+    reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=2, min_lr=1e-6)
+    model.fit(train_ds, epochs=20, steps_per_epoch=n_train_steps,
+              validation_data=val_ds, validation_steps=n_val_steps,
+              callbacks=[EarlyStopping(patience=5, restore_best_weights=True), reduce_lr])
 
+    # Test — per-session scaling and evaluation
+    from project_brain_decoder.io.nwb_loader import load_nwb
+    r2_list = []
+    for file in test_files:
+        session = load_nwb(file)
+        neural = np.concatenate([session["neural_spiking_band"], session["neural_threshold_crossings"]], axis=1)
+        targets = np.column_stack([session["target_index_velocity"], session["target_mrs_velocity"]])
 
-    # Test
-    load_test = load_nwb(test_file)
-    test_spike = load_test["neural_spiking_band"]
-    test_thresh = load_test["neural_threshold_crossings"] # (T, C)
-    neural_test = np.concatenate([test_spike, test_thresh], axis=1)
-    targets_test = load_test["target_mrs_velocity"] # (T,) or (T, d)
-    test_transformed = neural_scaler.transform(neural_test)
-    test_targets = targets_scaler.transform(targets_test if targets_test.ndim == 2
-                                              else targets_test.reshape(-1, 1))
-    X_test, y_test = make_windows(neural=test_transformed, targets=test_targets, window_size=30, stride=1)
-    test_pred = model.predict(X_test, batch_size=batch_size)
-    test_score = r2_score(y_true=y_test, y_pred=test_pred)
-    print("Test score: ", test_score)
+        neural_scaler = StandardScaler()
+        targets_scaler = StandardScaler()
+        neural_scaled = neural_scaler.fit_transform(neural)
+        targets_scaled = targets_scaler.fit_transform(targets)
 
-    # Save val and test scores
-    Path(get_project_root() / "results").mkdir(exist_ok=True)
-    df = pd.DataFrame(data={"Validation": [val_score], "Test": [test_score]})
-    df.to_csv(path_or_buf=get_project_root() / "results" / "tcn_r2.csv", index=False)
+        X_test, y_test = make_windows(neural_scaled, targets_scaled, window_size, stride)
+        y_pred = model.predict(X_test, batch_size=batch_size)
+        r2 = r2_score(y_test, y_pred, multioutput="raw_values")
+        r2_list.append(r2)
 
+    mean_r2 = np.mean(r2_list, axis=0)
+    print(f"Index vel. R²: {mean_r2[0]:.4f}. MRS vel. R²: {mean_r2[1]:.4f}")
 
-
-
+    # Save scores
+    save_r2.get_scores(model="tcn", score1=mean_r2[0], score2=mean_r2[1])
 
 
 if __name__ == "__main__":
-    main(model=get_tcn(window_size=window_size,
-                       input_dim=input_dim,
-                       TCN=TCN))
+    main()
