@@ -13,14 +13,7 @@ batch_size, window_size, input_dim = 128, 30, 192
 stride = 5
 
 
-def get_tcn(window_size, input_dim):
-    input_layer = Input(shape=(window_size, input_dim))
-    tcn_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8, 16],
-                       return_sequences=False, dropout_rate=0.3)(input_layer)
-    output_layer = Dense(2)(tcn_layer)
-    model = Model(inputs=[input_layer], outputs=[output_layer])
-    model.compile(optimizer=Adam(learning_rate=0.0005), loss='mse')
-    return model
+
 
 
 def main():
