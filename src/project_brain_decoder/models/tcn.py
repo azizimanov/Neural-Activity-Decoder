@@ -30,3 +30,10 @@ class TCNDecoder:
         model = Model(inputs=[input_layer], outputs=[output])
         model.compile(optimizer=Adam(learning_rate=0.0005), loss="mse")
         return model
+
+    def fit(self, train_ds, val_ds, n_train_steps, n_val_steps):
+        """Trains the model on the full dataset using generator-based pipelines"""
+        reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=2, min_lr=1e-6)
+        self.model.fit(train_ds, epochs=20, steps_per_epoch=n_train_steps,
+                       validation_data=val_ds, validation_steps=n_val_steps,
+                       callbacks=[EarlyStopping(patience=5, restore_best_weights=True), reduce_lr])
