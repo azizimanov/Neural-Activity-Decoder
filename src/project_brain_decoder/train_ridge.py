@@ -8,9 +8,9 @@ np.random.seed(42)
 # Load and split files
 folder = get_project_root() / "data" / "raw"
 files = list(folder.glob("*.nwb"))
-train = files[:187]
-val = files[187:249]
-test = files[249:]
+train = files[:187] # 60%
+val = files[187:249] # 20%
+test = files[249:] # 20%
 
 # Train
 decoder = RidgeDecoder(alpha=1.0)
