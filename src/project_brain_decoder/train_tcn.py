@@ -1,15 +1,9 @@
 import numpy as np
 import tensorflow as tf
-from keras.layers import Input, Dense
-from keras.models import Model
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from keras.optimizers import Adam
-from tcn import TCN
 from project_brain_decoder.config import get_project_root
-from project_brain_decoder.io.dataset import make_dataset, make_windows, count_windows
+from project_brain_decoder.io.dataset import make_windows, make_dataset, count_windows
+from project_brain_decoder.models.tcn import TCNDecoder
 from results import save_r2
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import r2_score
 
 tf.random.set_seed(42)
 np.random.seed(42)
