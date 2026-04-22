@@ -37,3 +37,44 @@ class TCNDecoder:
         self.model.fit(train_ds, epochs=20, steps_per_epoch=n_train_steps,
                        validation_data=val_ds, validation_steps=n_val_steps,
                        callbacks=[EarlyStopping(patience=5, restore_best_weights=True), reduce_lr])
+
+    def fine_tune(self, test_files, make_windows):
+        """Freezes the TCN layer and fine-tunes the output Dense layer per test session"""
+        for layer in self.model.layers:
+            if isinstance(layer, TCN):
+                layer.trainable = False
+        self.model.compile(optimizer=Adam(learning_rate=0.0005), loss="mse")
+
+        # Save base weights to reset between sessions
+        dense_layer = [l for l in self.model.layers if isinstance(l, Dense)][-1]
+        base_dense_weights = dense_layer.get_weights()
+
+        r2_list = []
+        for file in test_files:
+            dense_layer.set_weights(base_dense_weights)  # reset before each session
+            session = load_nwb(file)
+            neural = np.concatenate([session["neural_spiking_band"], session["neural_threshold_crossings"]], axis=1)
+            targets = np.column_stack([session["target_index_velocity"], session["target_mrs_velocity"]])
+
+            # 20/80 calibration/evaluation split
+            split = int(len(neural) * 0.2)
+            cal_neural, eval_neural = neural[:split], neural[split:]
+            cal_targets, eval_targets = targets[:split], targets[split:]
+
+            # Fit scaler on calibration only
+            neural_scaler = StandardScaler()
+            targets_scaler = StandardScaler()
+            cal_neural = neural_scaler.fit_transform(cal_neural)
+            cal_targets = targets_scaler.fit_transform(cal_targets)
+            eval_neural = neural_scaler.transform(eval_neural)
+            eval_targets = targets_scaler.transform(eval_targets)
+
+            X_cal, y_cal = make_windows(cal_neural, cal_targets, self.window_size, self.stride)
+            X_eval, y_eval = make_windows(eval_neural, eval_targets, self.window_size, self.stride)
+
+            self.model.fit(X_cal, y_cal, epochs=5, validation_data=(X_eval, y_eval))
+            y_pred = self.model.predict(X_eval)
+            r2 = r2_score(y_eval, y_pred, multioutput="raw_values")
+            r2_list.append(r2)
+
+        return np.mean(r2_list, axis=0)
