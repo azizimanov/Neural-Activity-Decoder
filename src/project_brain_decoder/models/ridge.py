@@ -30,3 +30,20 @@ class RidgeDecoder:
         X = np.concatenate(neural_list, axis=0)
         y = np.concatenate(targets_list, axis=0)
         self.model.fit(X, y)
+
+    def evaluate(self, test_files):
+        """Evaluates per-session on test files with independent scaling"""
+        r2_list = []
+        for file in test_files:
+            session = load_nwb(file)
+            neural = np.concatenate([session["neural_spiking_band"], session["neural_threshold_crossings"]], axis=1)
+            targets = np.column_stack([session["target_index_velocity"], session["target_mrs_velocity"]])
+
+            neural_scaled = StandardScaler().fit_transform(neural)
+            targets_scaled = StandardScaler().fit_transform(targets)
+
+            y_pred = self.model.predict(neural_scaled)
+            r2 = r2_score(targets_scaled, y_pred, multioutput="raw_values")
+            r2_list.append(r2)
+
+        return np.mean(r2_list, axis=0)
