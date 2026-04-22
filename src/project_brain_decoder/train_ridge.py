@@ -17,6 +17,9 @@ test = files[249:]
 decoder = RidgeDecoder(alpha=1.0)
 decoder.fit(train)
 
+# Evaluate on test sessions
+mean_r2 = decoder.evaluate(test)
+print(f"Index vel. R²: {mean_r2[0]:.4f}. MRS vel. R²: {mean_r2[1]:.4f}")
 
 
 if __name__ == "__main__":
