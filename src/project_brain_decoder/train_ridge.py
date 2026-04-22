@@ -13,25 +13,9 @@ val = files[187:249]
 test = files[249:]
 
 
-def main(path, model, results_dir):
-    results = []
-    for file_path in path.glob("*.nwb"):
-        nwb_file = load_nwb(file_path)
-        X = nwb_file["neural_threshold_crossings"]
-        y = nwb_file["target_index_velocity"]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20,
-                                                            random_state=42, shuffle=False)
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
-        model.fit(X=X_train, y=y_train)
-        prediction = model.predict(X=X_test)
-        r2 = r2_score(y_pred=prediction, y_true=y_test)
-        results.append(tuple([Path(file_path).stem, f"{r2}"]))
-    df = pd.DataFrame(data=results, columns=["Session name", "R2 score"])
-    results_dir.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path_or_buf=results_dir / "ridge_r2.csv", index=False)
-    return model
+# Train
+decoder = RidgeDecoder(alpha=1.0)
+decoder.fit(train)
 
 
 
