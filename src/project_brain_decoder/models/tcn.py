@@ -78,3 +78,7 @@ class TCNDecoder:
             r2_list.append(r2)
 
         return np.mean(r2_list, axis=0)
+
+    def save(self, path):
+        """Saves the trained model to disk"""
+        self.model.save(path)
