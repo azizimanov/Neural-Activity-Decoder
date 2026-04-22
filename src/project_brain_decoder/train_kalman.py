@@ -11,3 +11,7 @@ files = sorted(folder.glob("*.nwb"))
 train = files[:187]
 val = files[187:249]
 test = files[249:]
+
+# Train
+decoder = KalmanDecoder(n_components=50, dim_state=5)
+decoder.fit(train)
