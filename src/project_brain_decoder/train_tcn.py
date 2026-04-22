@@ -28,12 +28,11 @@ n_val_steps = count_windows(val, window_size, stride) // batch_size
 train_ds = make_dataset(train, window_size, stride, input_dim, batch_size, shuffle=True).repeat()
 val_ds = make_dataset(val, window_size, stride, input_dim, batch_size).repeat()
 
-    # Train
-    model = get_tcn(window_size, input_dim)
-    reduce_lr = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=2, min_lr=1e-6)
-    model.fit(train_ds, epochs=20, steps_per_epoch=n_train_steps,
-              validation_data=val_ds, validation_steps=n_val_steps,
-              callbacks=[EarlyStopping(patience=5, restore_best_weights=True), reduce_lr])
+# Train TCN
+decoder = TCNDecoder(window_size, input_dim, batch_size, stride)
+decoder.fit(train_ds=train_ds, val_ds=val_ds, n_train_steps=n_train_steps, n_val_steps=n_val_steps)
+
+
 
     # Test — per-session scaling and evaluation
     from project_brain_decoder.io.nwb_loader import load_nwb
