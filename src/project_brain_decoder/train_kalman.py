@@ -23,5 +23,9 @@ print(f"Index vel. R²: {r2[0]:.4f}. MRS vel. R²: {r2[1]:.4f}")
 # Save scores
 save_r2.get_scores(model="kalman", score1=r2[0], score2=r2[1])
 
+# Save the model
+decoder.save(get_project_root() / "models" / "kalman.pkl")
+
+
 
 
