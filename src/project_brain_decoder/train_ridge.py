@@ -1,11 +1,8 @@
-from pathlib import Path
+import numpy as np
 from project_brain_decoder.config import get_project_root
-from project_brain_decoder.io.nwb_loader import load_nwb
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import Ridge
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import r2_score
-import pandas as pd
+from project_brain_decoder.models.ridge import RidgeDecoder
+from results import save_r2
+
 
 
 
