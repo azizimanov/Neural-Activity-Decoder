@@ -16,19 +16,17 @@ stride = 5
 # Load and split files
 folder = get_project_root() / "data" / "raw"
 files = list(folder.glob("*.nwb"))
-train_files = files[:187]
-val_files = files[187:249]
-test_files = files[249:]
+train = files[:187]
+val = files[187:249]
+test = files[249:]
 
+# Count steps
+n_train_steps = count_windows(train, window_size, stride) // batch_size
+n_val_steps = count_windows(val, window_size, stride) // batch_size
 
-
-    # Count steps
-    n_train_steps = count_windows(train_files, window_size, stride) // batch_size
-    n_val_steps = count_windows(val_files, window_size, stride) // batch_size
-
-    # Build generator-based datasets with per-session scaling
-    train_ds = make_dataset(train_files, window_size, stride, input_dim, batch_size, shuffle=True).repeat()
-    val_ds = make_dataset(val_files, window_size, stride, input_dim, batch_size).repeat()
+# Build generator-based datasets with per-session scaling
+train_ds = make_dataset(train, window_size, stride, input_dim, batch_size, shuffle=True).repeat()
+val_ds = make_dataset(val, window_size, stride, input_dim, batch_size).repeat()
 
     # Train
     model = get_tcn(window_size, input_dim)
