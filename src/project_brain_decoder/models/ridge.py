@@ -47,3 +47,9 @@ class RidgeDecoder:
             r2_list.append(r2)
 
         return np.mean(r2_list, axis=0)
+
+    def save(self, path):
+        """Saves the trained model to disk"""
+        with open(path, "wb") as f:
+            pickle.dump({"model": self.model, "alpha": self.alpha}, f)
+
