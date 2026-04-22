@@ -18,3 +18,15 @@ class TCNDecoder:
         self.batch_size = batch_size
         self.stride = stride
         self.model = self._build_model()
+
+
+    def _build_model(self):
+        """Builds a TCN with exponentially dilated convolutions and a Dense projection to 2D velocity"""
+        input_layer = Input(shape=(self.window_size, self.input_dim))
+        tcn_layer = TCN(nb_filters=32, kernel_size=4, dilations=[1, 2, 4, 8, 16],
+                        return_sequences=False, dropout_rate=0.3)(input_layer)
+        output = Dense(units=2)(tcn_layer)
+
+        model = Model(inputs=[input_layer], outputs=[output])
+        model.compile(optimizer=Adam(learning_rate=0.0005), loss="mse")
+        return model
