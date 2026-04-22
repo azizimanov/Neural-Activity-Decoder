@@ -53,3 +53,9 @@ class RidgeDecoder:
         with open(path, "wb") as f:
             pickle.dump({"model": self.model, "alpha": self.alpha}, f)
 
+    def load(self, path):
+        """Loads a trained model from disk"""
+        with open(path, "rb") as f:
+            d = pickle.load(f)
+        self.model = d["model"]
+        self.alpha = d["alpha"]
