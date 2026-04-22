@@ -12,7 +12,6 @@ train = files[:187]
 val = files[187:249]
 test = files[249:]
 
-
 # Train
 decoder = RidgeDecoder(alpha=1.0)
 decoder.fit(train)
@@ -21,6 +20,6 @@ decoder.fit(train)
 mean_r2 = decoder.evaluate(test)
 print(f"Index vel. R²: {mean_r2[0]:.4f}. MRS vel. R²: {mean_r2[1]:.4f}")
 
-
-if __name__ == "__main__":
-    main(path=data_dir, model=Ridge(), results_dir=results_dir)
+# Save model and scores
+decoder.save(get_project_root() / "models" / "ridge.pkl")
+save_r2.get_scores(model="ridge", score1=mean_r2[0], score2=mean_r2[1])
