@@ -4,3 +4,10 @@ from project_brain_decoder.models.kalman import KalmanDecoder
 from results import save_r2
 
 np.random.seed(42)
+
+# Load and split files
+folder = get_project_root() / "data" / "raw"
+files = sorted(folder.glob("*.nwb"))
+train = files[:187]
+val = files[187:249]
+test = files[249:]
