@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 from filterpy.kalman import KalmanFilter
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import IncrementalPCA
@@ -153,3 +154,21 @@ class KalmanDecoder:
         all_y_true = np.concatenate(all_y_true)
         all_y_pred = np.concatenate(all_y_pred)
         return r2_score(y_true=all_y_true, y_pred=all_y_pred, multioutput="raw_values")
+
+    def save(self, path):
+        """Saves fitted parameters and PCA to disk"""
+        with open(path, "wb") as f:
+            pickle.dump({
+                "pca": self.pca,
+                "F": self.F, "H": self.H, "Q": self.Q, "R": self.R,
+                "n_components": self.n_components, "dim_state": self.dim_state,
+            }, f)
+
+    def load(self, path):
+        """Loads fitted parameters and rebuilds the Kalman filter"""
+        with open(path, "rb") as f:
+            d = pickle.load(f)
+        self.pca = d["pca"]
+        self.F, self.H, self.Q, self.R = d["F"], d["H"], d["Q"], d["R"]
+        self.n_components, self.dim_state = d["n_components"], d["dim_state"]
+        self._build_filter()
