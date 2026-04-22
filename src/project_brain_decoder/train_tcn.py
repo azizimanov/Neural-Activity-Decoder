@@ -35,3 +35,7 @@ decoder.fit(train_ds=train_ds, val_ds=val_ds, n_train_steps=n_train_steps, n_val
 # Evaluate on test sessions
 mean_r2 = decoder.fine_tune(test_files=test[:5], make_windows=make_windows)
 print(f"Index vel. R²: {mean_r2[0]:.4f}. MRS vel. R²: {mean_r2[1]:.4f}")
+
+# Save scores
+decoder.save(get_project_root() / "models" / "tcn.keras")
+save_r2.get_scores(model="tcn", score1=mean_r2[0], score2=mean_r2[1])
