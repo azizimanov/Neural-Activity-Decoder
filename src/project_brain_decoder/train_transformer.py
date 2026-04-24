@@ -36,8 +36,8 @@ decoder.fit(train_ds=train_ds, val_ds=val_ds, n_train_steps=n_train_steps, n_val
 
 # Fine-tune and evaluate on test sessions
 mean_r2 = decoder.fine_tune(test[:5], make_windows)
-print(f"Index vel. R²: {mean_r2[0]:.4f}. MRS vel. R²: {mean_r2[1]:.4f}")
+print(f"Index vel. R²: {mean_r2[0]:.2f}. MRS vel. R²: {mean_r2[1]:.2f}")
 
 # Save model and scores
-decoder.save(get_project_root() / "models" / "transformer.keras")
+decoder.save(get_project_root() / "saved_models" / "transformer.keras")
 save_r2.get_scores(model="transformer",score1=mean_r2[0], score2=mean_r2[1])
