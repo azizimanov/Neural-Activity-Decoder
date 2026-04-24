@@ -8,6 +8,7 @@ np.random.seed(42)
 # Load and split files
 folder = get_project_root() / "data" / "raw"
 files = list(folder.glob("*.nwb"))
+np.random.shuffle(files)
 train = files[:187] # 60%
 val = files[187:249] # 20%
 test = files[249:] # 20%
