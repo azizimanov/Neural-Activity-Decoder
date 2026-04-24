@@ -40,4 +40,4 @@ print(f"Index vel. R²: {mean_r2[0]:.2f}. MRS vel. R²: {mean_r2[1]:.2f}")
 
 # Save model and scores
 decoder.save(get_project_root() / "saved_models" / "transformer.keras")
-save_r2.get_scores(model="transformer",score1=mean_r2[0], score2=mean_r2[1])
+save_r2.get_scores(model="transformer",score1=round(mean_r2[0], 2), score2=round(mean_r2[1], 2))
