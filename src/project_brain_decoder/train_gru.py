@@ -16,6 +16,7 @@ stride = 5
 # Load and split files
 folder = get_project_root() / "data" / "raw"
 files = list(folder.glob("*.nwb"))
+np.random.shuffle(files)
 train = files[:187]
 val = files[187:249]
 test = files[249:]
