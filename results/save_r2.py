@@ -4,7 +4,7 @@ from project_brain_decoder.config import get_project_root
 def get_scores(model, score1, score2):
     try:
         csv = pd.read_csv(get_project_root() / "results" / "r2_scores.csv")
-    except pd.errors.EmptyDataError:
+    except (pd.errors.EmptyDataError, FileNotFoundError):
         csv = pd.DataFrame(columns=["Model", "Index vel. R2 Score", "MRS vel. R2 Score"])
     if model not in csv["Model"].values:
         r2_dict = {"Model": [model], "Index vel. R2 Score": [score1], "MRS vel. R2 Score": [score2]}
