@@ -8,3 +8,4 @@ keras-tcn~=3.5.6
 filterpy~=1.4.5
 dandi~=0.74.3
 pandas~=2.3.3
+matplotlib~=3.10.9
