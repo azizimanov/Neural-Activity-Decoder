@@ -1,7 +1,7 @@
 import numpy as np
 from project_brain_decoder.config import get_project_root
 from project_brain_decoder.models.kalman import KalmanDecoder
-from results import save_r2
+from project_brain_decoder.eval import save_r2
 
 np.random.seed(42)
 

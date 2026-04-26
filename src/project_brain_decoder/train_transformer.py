@@ -3,7 +3,7 @@ import tensorflow as tf
 from project_brain_decoder.config import get_project_root
 from project_brain_decoder.io.dataset import make_windows, make_dataset, count_windows
 from project_brain_decoder.models.transformer import TransformerDecoder
-from results import save_r2
+from project_brain_decoder.eval import save_r2
 
 tf.random.set_seed(42)
 np.random.seed(42)
@@ -40,4 +40,4 @@ print(f"Index vel. R²: {mean_r2[0]:.2f}. MRS vel. R²: {mean_r2[1]:.2f}")
 
 # Save model and scores
 decoder.save(get_project_root() / "saved_models" / "transformer.keras")
-save_r2.get_scores(model="transformer",score1=round(mean_r2[0], 2), score2=round(mean_r2[1], 2))
+save_r2.get_scores(model="transformer", score1=round(mean_r2[0], 2), score2=round(mean_r2[1], 2))
