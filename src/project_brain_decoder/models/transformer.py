@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import keras
 from keras.layers import Input, Dense, LayerNormalization, MultiHeadAttention, Dropout, GlobalAveragePooling1D, Layer
 from keras.models import Model
 from keras.optimizers import Adam
@@ -8,10 +9,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 from src.project_brain_decoder.io.nwb_loader import load_nwb
 
+@keras.saving.register_keras_serializable()
 class PositionalEncoder(Layer):
     """Injects sinusoidal position information into the input sequence"""
-    def __init__(self, window_size, d_model):
-        super().__init__()
+    def __init__(self, window_size, d_model, **kwargs):
+        super().__init__(**kwargs)
+        self.window_size = window_size
+        self.d_model = d_model
         pos = np.arange(window_size)[:, np.newaxis]
         i = np.arange(d_model)[np.newaxis, :]
         angle_rates = pos / np.power(10000, (2 * (i // 2)) / d_model)
@@ -23,6 +27,10 @@ class PositionalEncoder(Layer):
     def call(self, x):
         return x + self.pe  # broadcast across batch
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"window_size": self.window_size, "d_model": self.d_model})
+        return config
 
 
 class TransformerDecoder:
@@ -68,7 +76,6 @@ class TransformerDecoder:
         self.model.fit(train_ds, epochs=20, steps_per_epoch=n_train_steps,
                        validation_data=val_ds, validation_steps=n_val_steps,
                        callbacks=[EarlyStopping(patience=3, restore_best_weights=True), reduce_lr])
-
 
 
     def fine_tune(self, test_files, make_windows):
