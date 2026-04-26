@@ -1,2 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+
+# Data
 data/raw/
-data/link_data.tar.gz
+data/preprocessed/
+*.tar.gz
+
+# Model weights
+saved_models/
+
+# Results (outputs, not source)
+results/*.csv
+results/*.png
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment / IDE
+.venv/
+.env
+.idea/
+.pycharm/
