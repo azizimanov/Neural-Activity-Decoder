@@ -4,7 +4,7 @@ from filterpy.kalman import KalmanFilter
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import IncrementalPCA
 from sklearn.metrics import r2_score
-from src.project_brain_decoder.io.nwb_loader import load_nwb
+from project_brain_decoder.io.nwb_loader import load_nwb
 
 
 class KalmanDecoder:
