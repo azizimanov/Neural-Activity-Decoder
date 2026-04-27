@@ -31,4 +31,6 @@ def load_nwb(file_path: Path) -> dict[str, np.ndarray]:
                   "target_mrs_position": target_mrs_position,
                   "target_mrs_velocity": target_mrs_velocity}
 
+
     return array_dict
+

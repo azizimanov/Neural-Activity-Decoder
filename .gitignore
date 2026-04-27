@@ -1,11 +1,33 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+.env
 
 # Data
-data/raw/
 data/preprocessed/
+data/raw/*.nwb
+!data/raw/sub-Monkey-N_ses-20200127_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200130_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200204_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200205_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200206_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200211_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200222_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200224_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200225_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200228_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200302_ecephys.nwb
+!data/raw/sub-Monkey-N_ses-20200310_ecephys.nwb
 *.tar.gz
+
 
 # Model weights
 saved_models/
@@ -13,12 +35,15 @@ saved_models/
 # Results (outputs, not source)
 results/*.csv
 results/*.png
+!results/.gitkeep
 
-# Notebook checkpoints
+# Notebooks
 .ipynb_checkpoints/
 
-# Environment / IDE
-.venv/
-.env
+# IDE
 .idea/
-.pycharm/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
