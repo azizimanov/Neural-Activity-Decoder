@@ -1,0 +1,6 @@
+Model,Index vel. R2 Score,MRS vel. R2 Score
+transformer,0.47,0.49
+ridge,0.06,0.09
+tcn,0.38,0.42
+kalman,0.06,0.14
+gru,0.48,0.52
