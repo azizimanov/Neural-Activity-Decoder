@@ -1,6 +1,6 @@
 #!/bin/bash
 # Reproduces all baseline results on whatever sessions are in data/raw/
-# Usage: ./scripts/run_baseline.sh
+# Usage: ./scripts/run_decoders.sh
 
 set -euo pipefail
 
