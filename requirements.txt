@@ -9,3 +9,4 @@ filterpy~=1.4.5
 dandi~=0.74.3
 pandas~=2.3.3
 matplotlib~=3.10.9
+pytest~=9.0.3
