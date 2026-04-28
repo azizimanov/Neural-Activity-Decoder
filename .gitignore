@@ -28,11 +28,6 @@ data/raw/*.nwb
 !data/raw/sub-Monkey-N_ses-20200310_ecephys.nwb
 *.tar.gz
 
-# Results (outputs, not source)
-results/*.csv
-results/*.png
-!results/.gitkeep
-
 # Notebooks
 .ipynb_checkpoints/
 
