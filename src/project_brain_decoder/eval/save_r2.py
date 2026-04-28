@@ -1,6 +1,4 @@
 import pandas as pd
-from keras.src.backend.jax.numpy import empty
-
 from project_brain_decoder.config import get_project_root
 
 def get_scores(model, score1, score2):
