@@ -201,7 +201,11 @@ def main():
 
     # Load test files (same split as training)
     files = sorted((root / "data" / "raw").glob("*.nwb"))
-    test_files = files[249:]
+    n = len(files)
+    if n >= 312:
+        test_files = files[249:]
+    else:
+        test_files = files[int(0.8 * n):]
 
     # Load all models
     gru = load_model(models_dir / "gru.keras")
