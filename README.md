@@ -27,7 +27,7 @@ This loads the pre-trained models from `saved_models/` and regenerates the evalu
 dandi download DANDI:001201/0.251023.2336
 ```
 
-Dataset details: [LINK on DANDI Archive](https://dandiarchive.org/dandiset/001201) — 312 sessions, 192 channels (96 spiking band + 96 threshold crossings), recorded across many days from the same subject.
+Dataset details: [LINK on DANDI Archive](https://dandiarchive.org/dandiset/001201) — 312 sessions, 192 channels (96 spiking band + 96 threshold crossings), recorded across many days from the same subject. The dataset has already been binned (20ms) and the timesteps aligned.
 
 ## Results
 
