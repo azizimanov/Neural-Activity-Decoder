@@ -1,6 +1,6 @@
 # Project Brain Decoder — Predicting Finger Velocity from Neural Activity
 
-This project decodes 2D finger movement velocity from intracortical neural recordings using the **LINK dataset** — a 2-degree-of-freedom dexterous finger task where a monkey moves the index finger and the middle-ring-small (MRS) finger group together. The two fingers are neurally coupled in motor cortex, so I predict both velocities simultaneously: it's what the BCI field expects from a real decoder, and the joint task gives the model richer information about the underlying neural dynamics.
+This project decodes 2D finger movement velocity from intracortical neural recordings using the **LINK dataset** — a 2-degree-of-freedom dexterous finger task where a monkey moves the index finger and the middle-ring-small (MRS) finger group together. The two fingers are neurally coupled in motor cortex, so I predict both velocities simultaneously: the joint task gives the model richer information about the underlying neural dynamics.
 
 I trained five decoders (Ridge, Kalman, TCN, Transformer, GRU) on 187 sessions and evaluated cross-session generalization with a small per-session calibration step. The GRU came out on top at R² 0.50.
 
